@@ -665,7 +665,7 @@
       complex(q), allocatable :: CWORK2(:)
       COMPLEX(q),POINTER :: CHTOT(:)
       integer, parameter :: nprint=8
-      integer :: ofile
+      integer :: ofile, ofilestat
       integer :: INDFMAX, INDF, K, ix, iy, iz, ixp, iyp, izp, dix, diy, diz
       real(q) :: VLMK(KMAX), dV, RMAX, RCUT
       real(q) :: RI(3), RVEC(3), RVECF(3), DRVEC(3), val
@@ -726,20 +726,21 @@
       allocate( YLMF(NALLOC,LMMAX), DISTF(NALLOC), XSF(NALLOC), &
      &        YSF(NALLOC), ZSF(NALLOC) )
       CALLMPI( MPI_barrier( GRIDC%COMM, ierror ))
-      inquire(DIRECTORY="DERINFO", EXIST=LINFO) ! does external information exists?
       CALLMPI( MPI_barrier( GRIDC%COMM, ierror ))
-      if ( .not. LINFO ) call system('mkdir DERINFO')
+      call system('mkdir -p DERINFO')
       CALLMPI( MPI_barrier( GRIDC%COMM, ierror ))
-      write( buffer, "(I)" ) ICPU
+      write( buffer, "(I50)" ) ICPU
       buffer = trim(adjustl(buffer))
       write( fn, "('DERINFO/',A)" ) buffer
       ofile = 666+ICPU-1
-      ! if DERINFO exists, open files to read
-      if ( LINFO ) then
-        if ( ICPU == 1 ) print *, 'read DERINFO'
-        open( unit=ofile, file=fn, action='read' )
-      ! else, open files to write and prepare for the real calculations
+      if ( ICPU == 1 ) print *, 'read DERINFO'
+      open( unit=ofile, file=fn, action='read', IOSTAT=ofilestat)
+      if (ofilestat == 0) then
+        LINFO = .true.
       else
+        LINFO = .false.
+      endif
+      if (LINFO) then
         if ( ICPU == 1 ) print *, 'write DERINFO'
         open( unit=ofile, file=fn, action='write' )
         ! set up YLM for the fine integration grid, this is shared by all atom
