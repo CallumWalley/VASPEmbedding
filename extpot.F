@@ -215,11 +215,11 @@
       allocate( SGRID(NXMAX,NYMAX,NZMAX) )
       allocate(SCX(-di_smear:di_smear), SCY(-di_smear:di_smear), SCZ(-di_smear:di_smear))
       ! 1D interpolate for delta grid, used later as basis for 3D B-spline
-      call CALC_Sdelta_COEFF(NXMAX, SCX, di_smear)
-      call CALC_Sdelta_COEFF(NYMAX, SCY, di_smear)
-      call CALC_Sdelta_COEFF(NZMAX, SCZ, di_smear)
-      call BSPLINE_INTERPOLATE_COEFF( EXTPT_GRID, SGRID, NXMAX, NYMAX, NZMAX, di_smear, &
-                                        SCX, SCY, SCZ, GRIDC )
+      call CALC_Sdelta_COEFF(NXMAX, DBLE(SCX), di_smear)
+      call CALC_Sdelta_COEFF(NYMAX, DBLE(SCY), di_smear)
+      call CALC_Sdelta_COEFF(NZMAX, DBLE(SCZ), di_smear)
+      call BSPLINE_INTERPOLATE_COEFF( DBLE(EXTPT_GRID), DBLE(SGRID), NXMAX, NYMAX, NZMAX, di_smear, &
+                                        DBLE(SCX), DBLE(SCY), DBLE(SCZ), GRIDC )
 
       ! allocate temporary arrays
 #ifdef MPI
@@ -262,7 +262,7 @@
                    RVEC(3) = ZS(IND)*R
                    RVEC = matmul( transpose(LATT_CUR%B(1:3,1:3)), RVEC(1:3) )
                    RVEC(:) = RVEC(:) + RI(:) ! grid coordinate in direct
-                   val = bspline( RVEC, SGRID, NXMAX, NYMAX, NZMAX )
+                   val = bspline( RVEC, DBLE(SGRID), NXMAX, NYMAX, NZMAX )
                    VLMK(K) = VLMK(K) + dV* FSWITCH(R,RMAX,Delta)* &
                         &  YLM(IND,LM)*RK(R,K,RCUT)*val
                  endif
@@ -423,7 +423,7 @@
             ix = mod(ix0+dix-1 + 10*nx, nx) + 1
             dx = r(1)*nx - (ix0-1)  - dix
             Bx = Bfunc(dx, h)
-            bspline = bspline + s_grid(ix,iy,iz)*Bx*By*Bz
+            bspline = bspline + DBLE(s_grid(ix,iy,iz)*Bx*By*Bz)
           enddo
         enddo
       enddo
@@ -870,7 +870,7 @@
                            abs(DRVEC(2)*NYMAX)<di_smear+1 .and. &
                            abs(DRVEC(3)*NZMAX)<di_smear+1) then
                           RVECF(:) = RVECF(:) + RI(:) ! grid coordinate in direct
-                          val = bspline( RVECF, SGRID, NXMAX, NYMAX, NZMAX )
+                          val = bspline( RVECF, DBLE(SGRID), NXMAX, NYMAX, NZMAX )
                           VLMK(K) = VLMK(K) + dV* FSWITCH(R,RMAX,Delta)* &
                             &  YLMF(INDF,JLM)*RK(R,K,RCUT)*val
                         endif
